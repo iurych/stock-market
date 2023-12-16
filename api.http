@@ -1,7 +1,7 @@
 GET http://localhost:3000/products
 
 ###
-GET http://localhost:3000/products/2
+GET http://localhost:3000/products/4
 
 ###
 POST http://localhost:3000/products
@@ -24,3 +24,18 @@ Content-Type: application/json
 ###
 DELETE http://localhost:3000/products/3
 
+###
+GET http://localhost:3000/stock-inputs
+
+###
+GET http://localhost:3000/stock-inputs/1
+
+###
+POST http://localhost:3000/stock-inputs
+Content-Type: application/json
+
+{
+  "product_id": 4,
+  "quantity": 30,
+  "date":"2000-01-01"
+}
