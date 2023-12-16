@@ -1,26 +1,60 @@
 import { Injectable } from '@nestjs/common';
+import { NotFoundError } from 'src/errors';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateStockOutputDto } from './dto/create-stock-output.dto';
-import { UpdateStockOutputDto } from './dto/update-stock-output.dto';
 
 @Injectable()
 export class StockOutputsService {
-  create(createStockOutputDto: CreateStockOutputDto) {
-    return 'This action adds a new stockOutput';
+  constructor(private prismaService: PrismaService) {}
+  async create(createStockOutputDto: CreateStockOutputDto) {
+    const product = await this.prismaService.product.findUnique({
+      where: { id: createStockOutputDto.product_id },
+    });
+
+    if (!product) {
+      throw new NotFoundError('Product not found');
+    }
+
+    if (product.quantity === 0) {
+      throw new Error('Product out of stock');
+    }
+
+    if (createStockOutputDto.quantity > product.quantity) {
+      throw new Error('Insufficient quantity of product');
+    }
+    // TODO lock row at the product table (verify at prisma)
+    const result = await this.prismaService.$transaction([
+      this.prismaService.stockOutput.create({
+        data: {
+          productId: createStockOutputDto.product_id,
+          quantity: createStockOutputDto.quantity,
+          date: createStockOutputDto.date,
+        },
+      }),
+      this.prismaService.product.update({
+        where: { id: createStockOutputDto.product_id },
+        data: { quantity: { decrement: createStockOutputDto.quantity } },
+      }),
+    ]);
+
+    return result[0];
   }
 
   findAll() {
-    return `This action returns all stockOutputs`;
+    return this.prismaService.stockOutput.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} stockOutput`;
-  }
-
-  update(id: number, updateStockOutputDto: UpdateStockOutputDto) {
-    return `This action updates a #${id} stockOutput`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} stockOutput`;
+  async findOne(id: number) {
+    try {
+      return await this.prismaService.stockOutput.findUniqueOrThrow({
+        where: { id },
+      });
+    } catch (error) {
+      console.error(error);
+      if (error.code === 'P2025') {
+        throw new NotFoundError(`Stock output with ID ${id} not found`);
+      }
+      throw error;
+    }
   }
 }

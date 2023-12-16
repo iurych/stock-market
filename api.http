@@ -39,3 +39,20 @@ Content-Type: application/json
   "quantity": 30,
   "date":"2000-01-01"
 }
+
+###
+
+GET http://localhost:3000/stock-outputs
+
+###
+GET http://localhost:3000/stock-outputs/2
+
+###
+POST http://localhost:3000/stock-outputs
+Content-Type: application/json
+
+{
+  "product_id": 4,
+  "quantity": 200,
+  "date":"2000-01-01"
+}

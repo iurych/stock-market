@@ -14,7 +14,8 @@ export class StockInputsService {
     if (!product) {
       throw new NotFoundError('Product not found');
     }
-    // TODO lock row at the product table (verify at prisma)
+
+    // TODO lock too
     const result = await this.prismaService.$transaction([
       this.prismaService.stockInput.create({
         data: {
@@ -25,7 +26,7 @@ export class StockInputsService {
       }),
       this.prismaService.product.update({
         where: { id: createStockInputDto.product_id },
-        data: { quantity: { increment: createStockInputDto.quantity } },
+        data: { quantity: { decrement: createStockInputDto.quantity } },
       }),
     ]);
 
